@@ -1,20 +1,23 @@
 const createError = require('http-errors')
 const User = require('../Models/User.model')
+const globals = require('../helpers/globals')
 
 const {
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
 } = require('../helpers/jwt_helper')
-// const client = require('../helpers/init_redis')
 
 module.exports = {
   register: async (req, res, next) => {
     try {
+      let result = await User.save(req.body);
+      if (result) {
+        res.json(globals.response(result, 'บันทึกข้อมูลสำเร็จ', []))
+      } else {
+        res.json(globals.response(result, 'ข้อมูลซ้ำ', []))
+      }
 
-      User.save(req.body);
-      
-      res.send({ accessToken, refreshToken })
     } catch (error) {
       if (error.isJoi === true) error.status = 422
       next(error)
@@ -23,21 +26,15 @@ module.exports = {
 
   login: async (req, res, next) => {
     try {
-      const result = await authSchema.validateAsync(req.body)
-      const user = await User.findOne({ email: result.email })
-      if (!user) throw createError.NotFound('User not registered')
-
-      const isMatch = await user.isValidPassword(result.password)
-      if (!isMatch)
-        throw createError.Unauthorized('Username/password not valid')
-
-      const accessToken = await signAccessToken(user.id)
-      const refreshToken = await signRefreshToken(user.id)
-
-      res.send({ accessToken, refreshToken })
+      let result = await User.login(req.body);
+      console.log(result)
+      if (result) {
+        res.json(globals.response(result, 'เข้าสู่ระบบสำเร็จ', []))
+      } else {
+        res.json(globals.response(result, 'ข้อมูลไม่ถูกต้อง', []))
+      }
     } catch (error) {
-      if (error.isJoi === true)
-        return next(createError.BadRequest('Invalid Username/Password'))
+      if (error.isJoi === true) error.status = 422
       next(error)
     }
   },
