@@ -52,7 +52,10 @@ module.exports = {
     if (compare) {
       success = true;
     }
-    return success;
+    return {
+      success: success,
+      data: result
+    };
   }
 
 

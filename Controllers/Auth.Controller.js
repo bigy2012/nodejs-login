@@ -27,8 +27,12 @@ module.exports = {
   login: async (req, res, next) => {
     try {
       let result = await User.login(req.body);
-      console.log(result)
-      if (result) {
+      if (result.success) {
+        const accessToken = await signAccessToken(result.data[0].users_id)
+        console.log(accessToken)
+        
+        
+        
         res.json(globals.response(result, 'เข้าสู่ระบบสำเร็จ', []))
       } else {
         res.json(globals.response(result, 'ข้อมูลไม่ถูกต้อง', []))
@@ -58,14 +62,12 @@ module.exports = {
       const { refreshToken } = req.body
       if (!refreshToken) throw createError.BadRequest()
       const userId = await verifyRefreshToken(refreshToken)
-      // client.DEL(userId, (err, val) => {
-      //   if (err) {
-      //     console.log(err.message)
-      //     throw createError.InternalServerError()
-      //   }
-      //   console.log(val)
-      //   res.sendStatus(204)
-      // })
+
+      const token = jwt.sign({
+        sub: user.id,
+        username: user.username
+      }, SECRET, { expiresIn: '3 hours' })
+
     } catch (error) {
       next(error)
     }
